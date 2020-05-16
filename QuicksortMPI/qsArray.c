@@ -11,7 +11,8 @@ double get_wall_seconds()
 }
 
 // Swaps two integers.
-void swap(int* a, int* b)
+void swap(int *a,
+          int *b)
 {
     int temp = *a;
     *a = *b;
@@ -21,7 +22,8 @@ void swap(int* a, int* b)
 // Shuffles an array using rand().
 // arr: array.
 // n:   array size.
-void shuffle(int* arr, const int n)
+void shuffle(int* arr, 
+const int n)
 {
     // Set seed for rand().
     srand(time(NULL));
@@ -35,7 +37,8 @@ void shuffle(int* arr, const int n)
 }
 
 // Prints an array to teminal in a column.
-void printArrVert(int* arr, const int n)
+void printArrVert(int *arr,
+                  const int n)
 {
     for (int i = 0; i < n; i++)
     {
@@ -44,7 +47,8 @@ void printArrVert(int* arr, const int n)
 }
 
 // Prints an array to terminal horizontally.
-void printArr(int* arr, const int n)
+void printArr(int* arr, 
+const int n)
 {
     printf("[");
     for (int i = 0; i < n-1; i++)
@@ -55,7 +59,9 @@ void printArr(int* arr, const int n)
 }
 
 // Prints a subset of an arr from lo to hi inclusive.
-void printSubArr(int* arr, const int lo, const int hi)
+void printSubArr(int *arr,
+                 const int lo,
+                 const int hi)
 {
     printf("[");
     for (int i = lo; i < hi; i++)
@@ -78,7 +84,8 @@ int* generateArr(const int n)
 }
 
 // Makes a copy of an array.
-int* copyArr(int* oldArr, const int n)
+int *copyArr(int *oldArr,
+             const int n)
 {
     int* newArr = (int*)malloc(sizeof(int)*n);
     for (int i=0; i<n; i++)
@@ -89,7 +96,8 @@ int* copyArr(int* oldArr, const int n)
 }
 
 // Verifies that an array is sorted.
-void verifySorted(int* arr, const int n)
+void verifySorted(int *arr,
+                  const int n)
 {
     for (int i=1; i<n; i++)
     {
@@ -101,4 +109,3 @@ void verifySorted(int* arr, const int n)
     }
     printf("*** Array is sorted. ***\n");
 }
-

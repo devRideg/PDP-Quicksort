@@ -74,5 +74,6 @@ int *copyArr(int *oldArr,
  * Verify if the values of an integer array are sorted
  * @param arr array to be tested
  * @param n length of array
+ */
 void verifySorted(int *arr,
                   const int n);

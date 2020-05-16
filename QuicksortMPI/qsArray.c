@@ -109,3 +109,9 @@ void verifySorted(int *arr,
     }
     printf("*** Array is sorted. ***\n");
 }
+
+// Reads input files
+int read_input(int *arr, char *input_name)
+{
+    file
+}

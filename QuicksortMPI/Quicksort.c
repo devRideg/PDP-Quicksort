@@ -3,61 +3,20 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
-#include "qsArray.h"
-#include "qsAlgorithm.h"
-#include <pthread.h>
+#include "qsMPI.h"
 
 
+
+int main(int argc, char *argv[])
+{
+    return;
+}
+
+
+/* ----------------------- OLD CODE!!!! ------------------------------------
 
 // === PARALLELIZED QUICKSORT ===
 
-// Struct used to call parallHelper.
-typedef struct threadData
-{
-    pthread_t thread;
-    int threadID;
-    int* arr;
-    int lo;
-    int hi;
-} threadData_t;
-
-// Intermediate step to call sequential quicksort with a pthread.
-void* parallHelper(void* args)
-{
-    threadData_t* data = (threadData_t*)args;
-    int* arr = (*data).arr;
-    int lo = (*data).lo;
-    int hi = (*data).hi;
-    quicksortHoare(arr, lo, hi);
-    pthread_exit(NULL);
-}
-
-// Preprocess by taking more samples to lower the risks of unbalanced load between threads.
-// the global args array holds a threadData_t struct for each thread to be used later by quicksortParall.
-const int maxLevel = 4;
-int threadCounter = 0;
-threadData_t args[16];
-void preprocess(int* arr, const int lo, const int hi, const int level)
-{
-    if (level < maxLevel)
-    {
-        int p = partitionHoareBalanced(arr, lo, hi);
-        preprocess(arr, lo, p, level+1);
-        preprocess(arr, p+1, hi, level+1);
-    }
-    else
-    {
-        threadData_t data;
-        data.arr = arr;
-        data.lo = lo;
-        data.hi = hi;
-        data.threadID = threadCounter;
-
-        args[threadCounter] = data;
-        threadCounter++;
-    }
-    
-}
 
 // Creates threads and assigns their workload.
 void quicksortParall(int* arr, const int lo, const int hi)
@@ -264,3 +223,4 @@ int main(int argc, char *argv[])
 
     pthread_exit(NULL);
 }
+*/

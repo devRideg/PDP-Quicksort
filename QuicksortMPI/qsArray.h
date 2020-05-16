@@ -77,3 +77,13 @@ int *copyArr(int *oldArr,
  */
 void verifySorted(int *arr,
                   const int n);
+
+/**
+ * Reads input values from file with given name and allocates 
+ * memory for an array to store them in
+ * @param arr pointer to non-initialized input array
+ * @param input_name char array of input file name
+ * @returns number of imported values
+ */ 
+int read_input(int *arr,
+               char *input_name);

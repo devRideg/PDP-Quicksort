@@ -111,7 +111,36 @@ void verifySorted(int *arr,
 }
 
 // Reads input files
-int read_input(int *arr, char *input_name)
+int read_input(int *arr,
+               char *input_name)
 {
-    FILE inputFile = fopen(input_name);
+    int n, i;
+    FILE *inputFile;
+
+    // open file
+    if ((inputFile = fopen(input_name, "r")) == NULL)
+        {
+            printf("Error opening file with name: %s\n", input_name);
+            return -1;
+        }
+
+    // Read input array length
+    fscanf(inputFile, "%d ", &n);
+    if (n < 0)
+    {
+        printf("Error! Invalid input array length: n = %d\n", n);
+        return -1;
+    }
+
+    // allocate array memory and read input data into array
+    arr = (int *) malloc(n * sizeof(int));
+
+    for (i = 0; i < n; i++)
+    {
+        fscanf(inputFile, "%d ", &arr[i]);
+    }
+
+    fclose(inputFile);
+
+    return n;
 }

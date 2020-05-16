@@ -113,5 +113,5 @@ void verifySorted(int *arr,
 // Reads input files
 int read_input(int *arr, char *input_name)
 {
-    file
+    FILE inputFile = fopen(input_name);
 }

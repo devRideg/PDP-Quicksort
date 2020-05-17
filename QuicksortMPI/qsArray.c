@@ -111,7 +111,7 @@ void verifySorted(int *arr,
 }
 
 // Reads input files
-int read_input(int *arr,
+int read_input(int **arr,
                char *input_name)
 {
     int n, i;
@@ -134,11 +134,11 @@ int read_input(int *arr,
     }
 
     // allocate array memory and read input data into array
-    arr = (int *) malloc(n * sizeof(int));
+    *arr = (int *) malloc(n * sizeof(int));
 
     for (i = 0; i < n; i++)
     {
-        fscanf(inputFile, "%d ", &arr[i]);
+        fscanf(inputFile, "%d ", &(*arr)[i]);
     }
 
     fclose(inputFile);

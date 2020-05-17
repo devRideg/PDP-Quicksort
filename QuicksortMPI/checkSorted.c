@@ -1,13 +1,14 @@
 /**
  * Small program to check if data is sorted in descending order
  */
-#include "qsArray.h"
+#include "checkSorted.h"
 
 int main(int argc, char *argv[])
 {
     int n, i, *arr, count = 0;
+    n = atoi(argv[2]);
 
-    n = read_input(arr, argv[1]);
+    read_input(arr, argv[1]);
 
     if(n < 0) return n;
 
@@ -22,7 +23,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        print("Array does not follow decending order for %d elements.\n", count);
+        printf("Array does not follow decending order for %d elements.\n", count);
     }
 
     free(arr);

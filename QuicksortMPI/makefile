@@ -23,6 +23,12 @@ qsMPI.o: qsMPI.c
 run: Quicksort
 	./Quicksort
 
+checkSorted: qsArray.o checkSorted.o
+	gcc -O3 -Wall -o checkSorted checkSorted.o qsArray.o -lm
+
+checkSorted.o: checkSorted.c
+	gcc -O3 -Wall -c checkSorted.c -lm
+
 debug:
 	gdb ./Quicksort
 

@@ -85,7 +85,7 @@ void verifySorted(int *arr,
  * @param input_name char array of input file name
  * @returns number of imported values
  */ 
-int read_input(int *arr,
+int read_input(int **arr,
                char *input_name);
 
 /**

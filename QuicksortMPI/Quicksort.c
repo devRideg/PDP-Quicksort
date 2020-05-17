@@ -6,6 +6,8 @@ int main(int argc, char *argv[])
     double startTime;
     int root = 0, rank, size, *input_data, nGlob; 
     int *local_data, nLoc, *rcvBuf, nRcv;
+    int recvcnts[size];                         // Recieve counts for gather
+    int displs[size];                           // displacements for gather
 
     const int pivot_strat = atoi(argv[3]);      // Storing pivot strategy choise 
     char *input_name = argv[1];                 // input file name
@@ -18,7 +20,7 @@ int main(int argc, char *argv[])
     // Read input input data
     if (rank == root)
     {
-        nGlob = read_input(input_data, argv[1]);
+        nGlob = read_input(&input_data, input_name);
         startTime = MPI_Wtime();
     }
 
@@ -27,11 +29,28 @@ int main(int argc, char *argv[])
 
     // Calculate local array and scatter input data
     nLoc = nGlob / size;
+
+    if (rank == root)
+    {
+        nLoc = nLoc + (nGlob % size);
+    }
+
     local_data = (int *) malloc(1.5 * nLoc * sizeof(int));
     nRcv = nLoc;
     rcvBuf = (int *) malloc(nLoc * sizeof(int));
 
-    MPI_Scatter(&input_data[0], nGlob, MPI_INT,
+    // Gather local data array sizes
+    MPI_Allgather(&nLoc, 1, MPI_INT, &recvcnts[0], 1, MPI_INT, MPI_COMM_WORLD);
+
+    // Calculate displacements in output array
+    displs[0] = 0;
+    for (int i = 1; i < size; i++)
+    {
+        displs[i] = displs[i-1] + recvcnts[i-1];
+    }
+
+    // scatter input data to processes
+    MPI_Scatterv(&input_data[0], &recvcnts[0], &displs[0], MPI_INT,
                 &local_data[0], nLoc, MPI_INT, root, MPI_COMM_WORLD);
 
     // Perform initial local sorting 
@@ -42,10 +61,6 @@ int main(int argc, char *argv[])
     {
         /* implement parallel qSort */
     }
-
-    // prepare for data gather to root
-    int recvcnts[size];
-    int displs[size];
 
     // Gather local data array sizes
     MPI_Allgather(&nLoc, 1, MPI_INT, &recvcnts[0], 1, MPI_INT, MPI_COMM_WORLD);

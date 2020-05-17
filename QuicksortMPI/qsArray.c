@@ -146,6 +146,35 @@ int read_input(int **arr,
     return n;
 }
 
+// Reads input files
+void read_input2(int **arr,
+               char *input_name,
+               int n)
+{
+    int i;
+    FILE *inputFile;
+
+    // open file
+    inputFile = fopen(input_name, "r");
+    if (inputFile == NULL)
+    {
+        printf("Error opening file with name: %s\n", input_name);
+        return -1;
+    }
+
+    // allocate array memory and read input data into array
+    *arr = (int *) malloc(n * sizeof(int));
+
+    for (i = 0; i < n; i++)
+    {
+        fscanf(inputFile, "%d ", &(*arr)[i]);
+    }
+
+    fclose(inputFile);
+
+    return;
+}
+
 int write_output(int *arr,
                  int n,
                  char *output_name)
@@ -169,4 +198,11 @@ int write_output(int *arr,
 
     fclose(outputFile);
     return 0;
+}
+
+// Comparator function for qsort
+int qsComp(const void *a,
+           const void *b)
+{
+    return (*(int *)a - *(int *)b);
 }

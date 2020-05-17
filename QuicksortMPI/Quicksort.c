@@ -54,16 +54,16 @@ int main(int argc, char *argv[])
                 &local_data[0], nLoc, MPI_INT, root, MPI_COMM_WORLD);
 
     // Perform initial local sorting 
-    quicksortHoare(local_data, 0, nLoc-1);
+    qsort((void *)local_data, nLoc, sizeof(int), qsComp);
 
     // If more than one processors are used perform parallel qSort
     if (size > 1)
     {
-        /* implement parallel qSort */
+        parQSort(local_data, rcvBuf, nLoc, nRcv, MPI_COMM_WORLD, pivot_strat);
     }
 
     // Gather local data array sizes
-    MPI_Allgather(&nLoc, 1, MPI_INT, &recvcnts[0], 1, MPI_INT, MPI_COMM_WORLD);
+    MPI_Allgather(&nLoc, 1, MPI_INT, &recvcnts[0], 1, MPI_INT, &MPI_COMM_WORLD);
 
     // Calculate displacements in output array
     displs[0] = 0;
@@ -81,15 +81,12 @@ int main(int argc, char *argv[])
     {
         printf("%f", MPI_Wtime() - startTime);
 
-        if (write_output(input_data, nGlob, output_name) < 0)
-        {
-            return -1;
-        }
+        write_output(input_data, nGlob, output_name);
+        free(input_data);
     }
 
     free(rcvBuf);
     free(local_data);
-    free(input_data);
     MPI_Finalize();
     return 0;
 }

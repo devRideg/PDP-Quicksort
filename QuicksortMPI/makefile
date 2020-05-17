@@ -36,4 +36,4 @@ valgrind:
 	valgrind --leak-check=full ./Quicksort
 
 clean:
-	rm -f $(BIN) *.o
+	rm -f $(BIN) checkSorted *.o

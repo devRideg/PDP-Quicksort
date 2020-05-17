@@ -89,6 +89,17 @@ int read_input(int **arr,
                char *input_name);
 
 /**
+ * Reads input values from file with given name and allocates 
+ * memory for an array to store them in
+ * @param arr pointer to non-initialized input array
+ * @param input_name char array of input file name
+ * @param n number of values in file
+ */ 
+void read_input2(int **arr,
+               char *input_name,
+               int n);
+
+/**
  * Writes values from an array to a file with given name
  * @param arr pointer to non-initialized input array
  * @param n length of array
@@ -98,3 +109,12 @@ int read_input(int **arr,
 int write_output(int *arr,
                  int n,
                  char *output_name);
+
+/**
+ * Comparator function for qsort
+ * @param a pointer to an int
+ * @param b pointer to an int
+ * @returns comparator value
+ */
+int qsComp(const void *a,
+           const void *b);

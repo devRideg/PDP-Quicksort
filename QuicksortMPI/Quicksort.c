@@ -1,11 +1,11 @@
-#include "qsMPI.h"
-
+#include "Quicksort.h"
 
 
 int main(int argc, char *argv[])
 {
     double startTime;
-    int root = 0, rank, size, *input_data, nGlob;
+    int root = 0, rank, size, *input_data, nGlob; 
+    int *local_data, nLoc, *rcvBuf, nRcv;
 
     const int pivot_strat = atoi(argv[3]);      // Storing pivot strategy choise 
     char *input_name = argv[1];                 // input file name
@@ -19,10 +19,61 @@ int main(int argc, char *argv[])
     if (rank == root)
     {
         nGlob = read_input(input_data, argv[1]);
+        startTime = MPI_Wtime();
     }
 
-    MPI_Bcast(nGlob, 1, MPI_INT, root, MPI_COMM_WORLD);
+    // Broadcast global array size
+    MPI_Bcast(&nGlob, 1, MPI_INT, root, MPI_COMM_WORLD);
 
+    // Calculate local array and scatter input data
+    nLoc = nGlob / size;
+    local_data = (int *)) malloc(1.5 * nLoc * sizeof(int));
+    nRcv = nLoc;
+    rcvBuf = (int *) malloc(nLoc * sizeof(int));
+
+    MPI_Scatter(&input_data[0], nGlob, MPI_INT,
+                &local_data[0], nLoc, MPI_INT, root, MPI_COMM_WORLD);
+
+    // Perform initial local sorting 
+    quicksortHoare(local_data, 0, nLoc-1);
+
+    // If more than one processors are used perform parallel qSort
+    if (size > 1)
+    {
+        /* implement parallel qSort */
+    }
+
+    // prepare for data gather to root
+    int recvcnts[size];
+    int displs[size];
+
+    // Gather local data array sizes
+    MPI_Allgather(&nLoc, 1, MPI_INT, &recvcnts[0], 1, MPI_INT, MPI_COMM_WORLD);
+
+    // Calculate displacements in output array
+    displs[0] = 0;
+    for (int i = 1; i < size; i++)
+    {
+        displs[i] = displs[i-1] + recvcnts[i-1];
+    }
+
+    // Gather data at root
+    MPI_Gatherv(&local_data[0], nLoc, MPI_INT, &input_data[0], &recvcnts[0],
+                &displs[0], MPI_INT, root, MPI_COMM_WORLD);
+
+    // write output file and print execution time
+    if (rank == root)
+    {
+        printf("%f", MPI_Wtime() - startTime);
+
+        if (write_output(input_data, nGlob, output_name) < 0)
+        {
+            return -1;
+        }
+    }
+
+    free(rcvBuf);
+    free(local_data);
     free(input_data);
     MPI_Finalize();
     return 0;

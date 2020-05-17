@@ -1,11 +1,24 @@
-CFLAGS=-Wall -O3
-LDFLAGS=-lm -pthread
+CC = mpicc
+CFLAGS= -std=c99 -g -O3
+LDFLAGS= -lm 
+OBJS = qsArray.o qsAlgorithm.o qsMPI.o Quicksort.o 
 
-Quicksort: Quicksort.o
-	gcc -g -o Quicksort Quicksort.o $(LDFLAGS)
+BIN = quicksort
+
+Quicksort: Quicksort.o 
+	$(CC) $(CFLAGS) -o $(BIN) $(OBJS) $(LDFLAGS)
 
 Quicksort.o: Quicksort.c
-	gcc -g $(CFLAGS) -c Quicksort.c
+	$(CC) $(CFLAGS) -c Quicksort.c $(LDFLAGS)
+
+qsArray.o: qsArray.c
+	$(CC) $(CFLAGS) -c qsArray.c $(LDFLAGS)
+
+qsAlgorithm.o: qsAlgorithm.c
+	$(CC) $(CFLAGS) -c qsAlgorithm.c $(LDFLAGS)
+
+qsMPI.o: qsMPI.c
+	$(CC) $(CFLAGS) -c qsMPI.c $(LDFLAGS)
 
 run: Quicksort
 	./Quicksort
@@ -17,4 +30,4 @@ valgrind:
 	valgrind --leak-check=full ./Quicksort
 
 clean:
-	rm -f ./Quicksort *.o
+	rm -f $(BIN) *.o

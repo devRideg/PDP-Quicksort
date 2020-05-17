@@ -87,3 +87,14 @@ void verifySorted(int *arr,
  */ 
 int read_input(int *arr,
                char *input_name);
+
+/**
+ * Writes values from an array to a file with given name
+ * @param arr pointer to non-initialized input array
+ * @param n length of array
+ * @param input_name char array of input file name
+ * @returns number of imported values
+ */ 
+int write_output(int *arr,
+                 int n,
+                 char *output_name);

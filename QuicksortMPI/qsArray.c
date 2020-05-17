@@ -118,11 +118,12 @@ int read_input(int *arr,
     FILE *inputFile;
 
     // open file
-    if ((inputFile = fopen(input_name, "r")) == NULL)
-        {
-            printf("Error opening file with name: %s\n", input_name);
-            return -1;
-        }
+    inputFile = fopen(input_name, "r");
+    if (inputFile == NULL)
+    {
+        printf("Error opening file with name: %s\n", input_name);
+        return -1;
+    }
 
     // Read input array length
     fscanf(inputFile, "%d ", &n);
@@ -143,4 +144,29 @@ int read_input(int *arr,
     fclose(inputFile);
 
     return n;
+}
+
+int write_output(int *arr,
+                 int n,
+                 char *output_name)
+{
+    int n, i; 
+    FILE *outputFile;
+    
+    // open file
+    outputFile = fopen(output_name, "w");
+    if (outputFile == NULL)
+    {
+        printf("Error opening file with name: %s\n", output_name);
+        return -1;
+    }
+
+    // Write array to file
+    for (i = 0; i < n; i++)
+    {
+        fprintf(outputFile, "%d ", arr[i]);
+    }
+
+    fclose(outputFile);
+    return 0;
 }

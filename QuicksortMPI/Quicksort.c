@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 
     local_data = (int *) malloc(1.5 * nLoc * sizeof(int));
     nRcv = nLoc;
-    rcvBuf = (int *) malloc(nLoc * sizeof(int));
+    rcvBuf = (int *) malloc(1.5 * nLoc * sizeof(int));
 
     // Gather local data array sizes
     MPI_Allgather(&nLoc, 1, MPI_INT, &recvcnts[0], 1, MPI_INT, MPI_COMM_WORLD);

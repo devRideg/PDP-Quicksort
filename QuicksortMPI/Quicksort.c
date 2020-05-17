@@ -5,15 +5,27 @@
 int main(int argc, char *argv[])
 {
     double startTime;
-    int root = 0, rank, size;
+    int root = 0, rank, size, *input_data, nGlob;
+
+    const int pivot_strat = atoi(argv[3]);      // Storing pivot strategy choise 
+    char *input_name = argv[1];                 // input file name
+    char *output_name = argv[2];                // output file name
+    
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    
+    // Read input input data
+    if (rank == root)
+    {
+        nGlob = read_input(input_data, argv[1]);
+    }
 
+    MPI_Bcast(nGlob, 1, MPI_INT, root, MPI_COMM_WORLD);
+
+    free(input_data);
     MPI_Finalize();
-    return;
+    return 0;
 }
 
 

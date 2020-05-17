@@ -5,7 +5,7 @@ OBJS = qsArray.o qsAlgorithm.o qsMPI.o Quicksort.o
 
 BIN = quicksort
 
-Quicksort: Quicksort.o 
+Quicksort: $(OBJS)
 	$(CC) $(CFLAGS) -o $(BIN) $(OBJS) $(LDFLAGS)
 
 Quicksort.o: Quicksort.c

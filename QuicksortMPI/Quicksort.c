@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 
     // Calculate local array and scatter input data
     nLoc = nGlob / size;
-    local_data = (int *)) malloc(1.5 * nLoc * sizeof(int));
+    local_data = (int *) malloc(1.5 * nLoc * sizeof(int));
     nRcv = nLoc;
     rcvBuf = (int *) malloc(nLoc * sizeof(int));
 

@@ -150,7 +150,7 @@ int write_output(int *arr,
                  int n,
                  char *output_name)
 {
-    int n, i; 
+    int i; 
     FILE *outputFile;
     
     // open file

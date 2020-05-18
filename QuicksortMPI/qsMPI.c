@@ -5,7 +5,6 @@ void parQSort(int **local_data,
               int *rcvBuf,
               int **tmp_array,
               int nLoc,
-              int nRcv,
               MPI_Comm *comm,
               const int strat)
 {
@@ -62,7 +61,7 @@ void parQSort(int **local_data,
         MPI_Comm_split(*comm, colour, rank, &newComm);
 
         /* then recursively call parQSort again with new comm */
-        parQSort(local_data, rcvBuf, tmp_array, nLoc, nRcv, &newComm, strat);
+        parQSort(local_data, rcvBuf, tmp_array, nLoc, &newComm, strat);
     }
 
     return;
@@ -72,7 +71,7 @@ void parQSort(int **local_data,
 int findPiv(int locPiv,
             int size,
             int rank,
-            int start,
+            int strat,
             MPI_Comm *comm)
 {
     int Pivs[size], result;
@@ -83,12 +82,12 @@ int findPiv(int locPiv,
     {
         result = Pivs[0];
     }
-    else if (start == 2)        // choose the median of the medians
+    else if (strat == 2)        // choose the median of the medians
     {
         qsort((void *)Pivs, size, sizeof(int), qsComp);
         result = Pivs[size/2];
     }
-    else if (start == 3)        // choose the mean of the medians
+    else if (strat == 3)        // choose the mean of the medians
     {
         for (i = 0; i < size; i++)
         {

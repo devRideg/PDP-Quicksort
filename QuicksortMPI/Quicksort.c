@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
     {
         rcvBuf = (int *) malloc(nLoc * sizeof(int));
         tmp_array = (int *) malloc(1.5 * nLoc * sizeof(int));
-        parQSort(&local_data, rcvBuf, &tmp_array, nLoc, nRcv, MPI_COMM_WORLD, pivot_strat);
+        parQSort(&local_data, rcvBuf, &tmp_array, nLoc, MPI_COMM_WORLD, pivot_strat);
     }
 
     // Gather local data array sizes

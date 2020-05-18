@@ -5,7 +5,7 @@ int main(int argc, char *argv[])
 {
     double startTime;
     int root = 0, rank, size, *input_data, nGlob; 
-    int *local_data, nLoc, *rcvBuf, nRcv;
+    int *local_data = NULL, nLoc, *rcvBuf = NULL, nRcv, *tmp_array = NULL;
     int recvcnts[size];                         // Recieve counts for gather
     int displs[size];                           // displacements for gather
 
@@ -37,7 +37,6 @@ int main(int argc, char *argv[])
 
     local_data = (int *) malloc(1.5 * nLoc * sizeof(int));
     nRcv = nLoc;
-    rcvBuf = (int *) malloc(1.5 * nLoc * sizeof(int));
 
     // Gather local data array sizes
     MPI_Allgather(&nLoc, 1, MPI_INT, &recvcnts[0], 1, MPI_INT, MPI_COMM_WORLD);
@@ -53,13 +52,17 @@ int main(int argc, char *argv[])
     MPI_Scatterv(&input_data[0], &recvcnts[0], &displs[0], MPI_INT,
                 &local_data[0], nLoc, MPI_INT, root, MPI_COMM_WORLD);
 
+
+
     // Perform initial local sorting 
     qsort((void *)local_data, nLoc, sizeof(int), qsComp);
 
     // If more than one processors are used perform parallel qSort
     if (size > 1)
     {
-        parQSort(local_data, rcvBuf, nLoc, nRcv, MPI_COMM_WORLD, pivot_strat);
+        rcvBuf = (int *) malloc(nLoc * sizeof(int));
+        tmp_array = (int *) malloc(1.5 * nLoc * sizeof(int));
+        parQSort(&local_data, rcvBuf, &tmp_array, nLoc, nRcv, MPI_COMM_WORLD, pivot_strat);
     }
 
     // Gather local data array sizes
@@ -71,7 +74,7 @@ int main(int argc, char *argv[])
     {
         displs[i] = displs[i-1] + recvcnts[i-1];
     }
-
+    
     // Gather data at root
     MPI_Gatherv(&local_data[0], nLoc, MPI_INT, &input_data[0], &recvcnts[0],
                 &displs[0], MPI_INT, root, MPI_COMM_WORLD);
@@ -82,9 +85,10 @@ int main(int argc, char *argv[])
         printf("%f", MPI_Wtime() - startTime);
 
         write_output(input_data, nGlob, output_name);
-        free(input_data);
     }
 
+    free(input_data);
+    free(tmp_array);
     free(rcvBuf);
     free(local_data);
     MPI_Finalize();

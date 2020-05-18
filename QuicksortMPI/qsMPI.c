@@ -1,13 +1,15 @@
 #include "qsMPI.h"
 
-void parQSort(int *local_data,
+// main paralell Quick sort algorithm
+void parQSort(int **local_data,
               int *rcvBuf,
+              int **tmp_array,
               int nLoc,
               int nRcv,
               MPI_Comm *comm,
               const int strat)
 {
-    int size, rank, locPiv, gPiv, pivInd = 0;
+    int size, rank, locPiv, gPiv, pivInd = 0, colour;
     int i, targRank, sendCount, sendDisp, rcvCount;
     MPI_Comm newComm;
     MPI_Status status;
@@ -33,17 +35,19 @@ void parQSort(int *local_data,
         }
 
         // Determine indicies and send counts
-        if (rank > size/2)
+        if (rank >= size/2)
         {
             targRank = rank - size/2;
             sendDisp = pivInd + 1;
             sendCount = nLoc - sendDisp;
+            colour = 2;
         }
         else
         {
             targRank = rank + size/2;
             sendDisp = 0;
             sendCount = pivInd + 1;
+            colour = 1;
         }
         
         MPI_Sendrecv(&sendCount, 1, MPI_INT, targRank, rank + 1,
@@ -52,16 +56,19 @@ void parQSort(int *local_data,
         MPI_Sendrecv(&local_data[sendDisp], sendCount, MPI_INT, targRank, rank,
                      &rcvBuf[0], rcvCount, MPI_INT, targRank, targRank, *comm, &status);
 
-        mergeArrays(&local_data, &nLoc, sendDisp, sendCount, &rcvBuf, rcvCount);
+        mergeArrays(local_data, &nLoc, sendDisp, sendCount, rcvBuf, rcvCount, tmp_array);
 
         /* Split communicator into two new communicators */    
-        /* then recursively call parQSort again with new comm */
+        MPI_Comm_split(*comm, colour, rank, &newComm);
 
+        /* then recursively call parQSort again with new comm */
+        parQSort(local_data, rcvBuf, tmp_array, nLoc, nRcv, &newComm, strat);
     }
 
     return;
 }
 
+// Find the pivot elemenmt based on given strategy
 int findPiv(int locPiv,
             int size,
             int rank,
@@ -93,37 +100,73 @@ int findPiv(int locPiv,
     return result;
 }
 
+// Merge two arrays
 void mergeArrays(int **local_data,
                  int *nLoc,
                  int sendDisp,
                  int sendCount,
-                 int **rcvBuf,
-                 int rcvCount)
+                 int *rcvBuf,
+                 int rcvCount,
+                 int **tmp_array)
 {
-    int i;
-    if (sendDisp == 0)
-    {
-        int *tmp;   
-        for (i = 0; i < *nLoc-sendCount; i++)
-        {
-            *rcvBuf[i+rcvCount] = *local_data[i+sendCount];
-        }
+    int locInd, rcvInd, i, newNLoc, *tmp;
 
-        *nLoc = rcvCount + *nLoc - sendCount;
-        tmp = *local_data;
-        *local_data = *rcvBuf;
-        *rcvBuf = tmp;
+    if (sendDisp == 0)
+    {   
+        // Determine indicies starting points and new nLoc
+        locInd = sendCount;
+        rcvInd = 0;
+        newNLoc = *nLoc - sendCount + rcvCount;
+
+        // Merge arrays, reused algorithm from iterative mergesort
+        for (i = 0; i < newNLoc; i++)
+        {
+            // if local_data ind has not hit end and either rcvInd is at end or
+            //loc element is smaller than rcv element
+            if ( locInd < *nLoc && (rcvInd >= rcvCount || (*local_data)[locInd] <= rcvBuf[rcvInd]) )
+            {
+                (*tmp_array)[i] = (*local_data)[locInd];
+                locInd++;
+            }
+            else //rcv element is smaller than loc element
+            {
+                (*tmp_array)[i] = rcvBuf[rcvInd];
+                rcvInd++;
+            }
+        }
     }
     else
     {
-        for (i = 0; i < rcvCount; i++)
+        // Determine indicies starting points and new nLoc
+        locInd = 0;
+        rcvInd = 0;
+        newNLoc = *nLoc - sendCount + rcvCount;
+
+        // Merge arrays, reused algorithm from iterative mergesort
+        for (i = 0; i < newNLoc; i++)
         {
-            *local_data[i+sendDisp] = *rcvBuf[i];
+            // if local_data ind has not hit end and either rcvInd is at end or
+            //loc element is smaller than rcv element
+            if ( locInd < sendDisp && (rcvInd >= rcvCount || (*local_data)[locInd] <= rcvBuf[rcvInd]) )
+            {
+                (*tmp_array)[i] = (*local_data)[locInd];
+                locInd++;
+            }
+            else //rcv element is smaller than loc element
+            {
+                (*tmp_array)[i] = rcvBuf[rcvInd];
+                rcvInd++;
+            }
         }
-        *nLoc = rcvCount + sendDisp;
     }
-    
-    qsort((void *) *local_data, *nLoc, sizeof(int), qsComp);
+
+    // Update valaue of nLoc
+    *nLoc = newNLoc;
+
+    // Swap local_data and tmp_array
+    tmp = *local_data;
+    *local_data = *tmp_array;
+    *tmp_array = tmp;    
 
     return;
 }

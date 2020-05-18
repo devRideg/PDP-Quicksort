@@ -21,13 +21,13 @@
  * @param nLoc pointer to current number of elements in local_data array
  * @param comm pointer to current MPI communicator
  * @param strat value for choosing pivot strategy
- */ 
-void parQSort(int **local_data,
-              int *rcvBuf,
-              int **tmp_array,
-              int nLoc,
-              MPI_Comm *comm,
-              const int strat);
+ */
+int parQSort(int **local_data,
+             int *rcvBuf,
+             int **tmp_array,
+             int nLoc,
+             MPI_Comm *comm,
+             const int strat);
 
 /**
  * Find the pivot value for processors in a communicator using a given 

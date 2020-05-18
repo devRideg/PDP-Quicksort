@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 
     if(count == 0)
     {
-        printf("Array is correctly sored in descending order!\n");
+        printf("Array is correctly sorted in ascending order!\n");
     }
     else
     {

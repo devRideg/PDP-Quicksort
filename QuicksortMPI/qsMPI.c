@@ -1,12 +1,12 @@
 #include "qsMPI.h"
 
 // main paralell Quick sort algorithm
-void parQSort(int **local_data,
-              int *rcvBuf,
-              int **tmp_array,
-              int nLoc,
-              MPI_Comm *comm,
-              const int strat)
+int parQSort(int **local_data,
+             int *rcvBuf,
+             int **tmp_array,
+             int nLoc,
+             MPI_Comm *comm,
+             const int strat)
 {
     int size, rank, locPiv, gPiv, pivInd = 0, colour;
     int i, targRank, sendCount, sendDisp, rcvCount;
@@ -15,35 +15,35 @@ void parQSort(int **local_data,
 
     MPI_Comm_size(*comm, &size);
     MPI_Comm_rank(*comm, &rank);
-
+    
     // find local pivot value
     locPiv = (*local_data)[nLoc/2];
 
     gPiv = findPiv(locPiv, size, rank, strat, comm);
 
-    if (size = 1) // if size of communicator is 0, do nothing
+    if (size == 1) // if size of communicator is 0, do nothing
     {
-        return;
+        return nLoc;
     }
     else
     {
         // Find largest element smaller than pivot
-        while ((*local_data)[pivInd] < gPiv)
+        while ((*local_data)[pivInd+1] < gPiv)
         {
             pivInd++;
         }
 
         // Determine indicies and send counts
-        if (rank >= size/2)
+        if (rank < size/2)
         {
-            targRank = rank - size/2;
+            targRank = rank + size/2;
             sendDisp = pivInd + 1;
             sendCount = nLoc - sendDisp;
             colour = 2;
         }
         else
         {
-            targRank = rank + size/2;
+            targRank = rank - size/2;
             sendDisp = 0;
             sendCount = pivInd + 1;
             colour = 1;
@@ -61,10 +61,10 @@ void parQSort(int **local_data,
         MPI_Comm_split(*comm, colour, rank, &newComm);
 
         /* then recursively call parQSort again with new comm */
-        parQSort(local_data, rcvBuf, tmp_array, nLoc, &newComm, strat);
+        nLoc = parQSort(local_data, rcvBuf, tmp_array, nLoc, &newComm, strat);
     }
 
-    return;
+    return nLoccyCY;
 }
 
 // Find the pivot elemenmt based on given strategy

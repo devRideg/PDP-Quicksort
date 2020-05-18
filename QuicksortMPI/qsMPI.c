@@ -17,9 +17,9 @@ void parQSort(int **local_data,
     MPI_Comm_rank(*comm, &rank);
 
     // find local pivot value
-    locPiv = local_data[nLoc/2];
+    locPiv = (*local_data)[nLoc/2];
 
-    gPiv = findPiv(locPiv, size, rank, strat, &comm);
+    gPiv = findPiv(locPiv, size, rank, strat, comm);
 
     if (size = 1) // if size of communicator is 0, do nothing
     {
@@ -28,7 +28,7 @@ void parQSort(int **local_data,
     else
     {
         // Find largest element smaller than pivot
-        while (local_data[pivInd] < gPiv)
+        while ((*local_data)[pivInd] < gPiv)
         {
             pivInd++;
         }
@@ -74,7 +74,7 @@ int findPiv(int locPiv,
             int strat,
             MPI_Comm *comm)
 {
-    int Pivs[size], result;
+    int Pivs[size], result, i;
 
     MPI_Allgather(&locPiv, 1, MPI_INT, &Pivs[0], size, MPI_INT, *comm);
 

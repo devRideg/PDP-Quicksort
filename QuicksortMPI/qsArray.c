@@ -1,15 +1,5 @@
 #include "qsArray.h"
 
-// For timings.
-double get_wall_seconds()
-{
-  struct timespec tspec;
-  clock_gettime(CLOCK_REALTIME, &tspec);
-  
-  double seconds = tspec.tv_sec + (double)tspec.tv_nsec/(double)1000000000;
-  return seconds;
-}
-
 // Swaps two integers.
 void swap(int *a,
           int *b)

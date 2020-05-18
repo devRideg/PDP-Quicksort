@@ -1,3 +1,8 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <time.h>
 /**
  * Functions related to general array interactions and used for 
  * file I/O and debugging
@@ -5,20 +10,6 @@
  * Written for assignment 3 of the PDP course.
  * Authors - Dennis Jensen and Johan Rideg 2020.
  */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <time.h>
-
-
-/**
- * Generates current wall time in seconds with up 
- * to nine significant digits.
- * @returns time in wall seconds
- */
-double get_wall_seconds();
 
 /**
  * Swap two dynamically allocated arrays

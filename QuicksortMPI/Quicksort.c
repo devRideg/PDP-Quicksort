@@ -12,7 +12,8 @@ int main(int argc, char *argv[])
     const int pivot_strat = atoi(argv[3]);      // Storing pivot strategy choise 
     char *input_name = argv[1];                 // input file name
     char *output_name = argv[2];                // output file name
-    
+    MPI_Comm comm = MPI_COMM_WORLD;
+
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -62,11 +63,11 @@ int main(int argc, char *argv[])
     {
         rcvBuf = (int *) malloc(nLoc * sizeof(int));
         tmp_array = (int *) malloc(1.5 * nLoc * sizeof(int));
-        parQSort(&local_data, rcvBuf, &tmp_array, nLoc, MPI_COMM_WORLD, pivot_strat);
+        parQSort(&local_data, rcvBuf, &tmp_array, nLoc, &comm, pivot_strat);
     }
 
     // Gather local data array sizes
-    MPI_Allgather(&nLoc, 1, MPI_INT, &recvcnts[0], 1, MPI_INT, &MPI_COMM_WORLD);
+    MPI_Allgather(&nLoc, 1, MPI_INT, &recvcnts[0], 1, MPI_INT, MPI_COMM_WORLD);
 
     // Calculate displacements in output array
     displs[0] = 0;

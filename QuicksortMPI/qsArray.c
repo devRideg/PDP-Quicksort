@@ -159,7 +159,7 @@ void read_input2(int **arr,
     if (inputFile == NULL)
     {
         printf("Error opening file with name: %s\n", input_name);
-        return -1;
+        return;
     }
 
     // allocate array memory and read input data into array

@@ -89,8 +89,9 @@ int read_input(int **arr,
                char *input_name);
 
 /**
- * Reads input values from file with given name and allocates 
- * memory for an array to store them in
+ * Reads input values from file with given name and number of values and
+ * allocates memory for an array to store them in. 
+ * Used when the number of values are not in inputfile.
  * @param arr pointer to non-initialized input array
  * @param input_name char array of input file name
  * @param n number of values in file

@@ -64,7 +64,7 @@ int parQSort(int **local_data,
         nLoc = parQSort(local_data, rcvBuf, tmp_array, nLoc, &newComm, strat);
     }
 
-    return nLoccyCY;
+    return nLoc;
 }
 
 // Find the pivot elemenmt based on given strategy

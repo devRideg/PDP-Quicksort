@@ -24,16 +24,14 @@ int main(int argc, char *argv[])
         startTime = MPI_Wtime();
     }
 
-    // Exit if number number of processors are larger than nGlob
-    if (size > nGlob)
-    {
-        printf("ERROR!!! input data set smaller than number of processors!!\n");
-        MPI_Finalize();
-        return -2;
-    }
-
     // Broadcast global array size
     MPI_Bcast(&nGlob, 1, MPI_INT, root, MPI_COMM_WORLD);
+
+    // set to run serially if number of processors is larger than problem size.
+    if (size > nGlob)
+    {
+        size = 1;
+    }
 
     // Calculate local array and scatter input data
     nLoc = create_nLoc(nGlob, size, rank);

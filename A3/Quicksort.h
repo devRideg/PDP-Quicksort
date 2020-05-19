@@ -6,3 +6,5 @@
  */
 #include "qsMPI.h"
 
+// Set to 1 to enable output writing
+int OUTPUTFILE = 1;

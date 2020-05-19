@@ -70,8 +70,18 @@ void mergeArrays(int **local_data,
                  int rcvCount,
                  int **tmp_array);
 
+/**
+ * Generate n for local block depending on global problem size and current rank.
+ * @param nGlob Global problem size
+ * @param size number of processors in current communicator
+ * @param rank rank of this processor
+ * @returns local problem size
+ */
 int create_nLoc(int nGlob,
 		int size,
 		int rank);
 
+/**
+ * Prints MPI_COMM_WORLD rank to stdout. Used for debugging.
+ */
 void world_rank();

@@ -1,0 +1,227 @@
+#include "qsMPI.h"
+
+// main paralell Quick sort algorithm
+int parQSort(int **local_data,
+              int *rcvBuf,
+              int **tmp_array,
+              int nLoc,
+              MPI_Comm *comm,
+              const int strat)
+{
+    int size, rank, locPiv, gPiv, pivInd = -1, colour;
+    int i, targRank, sendCount, sendDisp, rcvCount = 0;
+    MPI_Comm newComm;
+    MPI_Status status;
+
+    MPI_Comm_size(*comm, &size);
+    MPI_Comm_rank(*comm, &rank);
+    
+    // find local pivot value
+    locPiv = (*local_data)[nLoc/2];
+    //printf("size = %d, nLoc = %d, locPiv = %d, pID:%d\n", size, nLoc, pivInd, rank);
+
+    gPiv = findPiv(locPiv, strat, comm);
+    printf("size = %d, locPiv = %d, gPiv = %d, pID:%d\n",size,locPiv,gPiv,rank);
+    //    printArr(&(*local_data)[0], nLoc);
+
+    if (size == 1) // if size of communicator is 0, do nothing
+    {
+        return nLoc;
+    }
+    else
+    {
+        // Find largest element smaller than pivot
+      if(nLoc > 0)
+	{
+	  while ((*local_data)[pivInd+1] < gPiv && pivInd < nLoc-1)
+	    {
+	      pivInd++;
+	    }
+	}
+
+        // Determine indicies and send counts
+        if (rank < size/2)
+        {
+            targRank = rank + size/2;
+            sendDisp = pivInd + 1;
+            sendCount = nLoc - sendDisp;
+            colour = 2;
+	    //printArr(&(*local_data)[0],sendDisp);
+        }
+        else
+        {
+            targRank = rank - size/2;
+            sendDisp = 0;
+            sendCount = pivInd + 1;
+            colour = 1;
+	    //printArr(&(*local_data)[sendDisp],sendCount);
+        }
+        if (nLoc == 0)
+	  {
+	    sendCount = 0;
+	  }
+
+	printf("sendDisp = %d, sendCount = %d, targRank = %d, size = %d, pID;%d\n", sendDisp, sendCount, targRank, size, rank);
+	
+        MPI_Sendrecv(&sendCount, 1, MPI_INT, targRank, rank + 1,
+                     &rcvCount, 1, MPI_INT, targRank, targRank + 1, *comm, &status);
+	//printf("after sendCount, pID:%d\n",rank);
+        MPI_Sendrecv(&(*local_data)[sendDisp], sendCount, MPI_INT, targRank, rank,
+                     &rcvBuf[0], rcvCount, MPI_INT, targRank, targRank, *comm, &status);
+	//printf("after send data, pID:%d\n", rank);
+	//printArr(rcvBuf, rcvCount);
+        mergeArrays(local_data, &nLoc, sendDisp, sendCount, rcvBuf, rcvCount, tmp_array);
+
+	printf("nLoc = %d, size = %d, pID:%d\n", nLoc, size, rank);
+
+        /* Split communicator into two new communicators */    
+        MPI_Comm_split(*comm, colour, rank, &newComm);
+	printf("after MPI split, pID:%d\n", rank);
+        /* then recursively call parQSort again with new comm */
+	world_rank();
+        nLoc = parQSort(local_data, rcvBuf, tmp_array, nLoc, &newComm, strat);
+    }
+    
+    MPI_Comm_free(&newComm);
+    return nLoc;
+}
+
+// Find the pivot elemenmt based on given strategy
+int findPiv(int locPiv,
+            int strat,
+            MPI_Comm *comm)
+{
+  int i, size, rank, result = 0, root = 0;
+  MPI_Comm_size(*comm, &size);
+  MPI_Comm_rank(*comm, &rank);
+  
+  int *Pivs = (int *)malloc(size * sizeof(int));
+
+    if (strat == 1)             // choose median of rank 0
+    {
+      if (rank == root)
+	{
+	  result = locPiv;
+	}
+
+      MPI_Bcast(&result, 1, MPI_INT, root, *comm);
+    }
+    else if (strat == 2)        // choose the median of the medians
+    {
+      MPI_Gather(&locPiv, 1, MPI_INT, &Pivs[0], 1, MPI_INT, root, *comm);
+      
+      if (rank == root)
+	{
+	  qsort((void *)Pivs, size, sizeof(int), qsComp);
+	  result = Pivs[size/2];
+	}
+
+      MPI_Bcast(&result, 1, MPI_INT, root, *comm);
+    }
+    else if (strat == 3)        // choose the mean of the medians
+    {
+      MPI_Allreduce(&locPiv, &result, 1, MPI_INT, MPI_SUM, *comm);
+      result = result/size;
+    }
+    
+    free(Pivs);
+    return result;
+}
+
+// Merge two arrays
+void mergeArrays(int **local_data,
+                 int *nLoc,
+                 int sendDisp,
+                 int sendCount,
+                 int *rcvBuf,
+                 int rcvCount,
+                 int **tmp_array)
+{
+    int locInd, rcvInd, i, newNLoc, *tmp;
+
+    if (sendDisp == 0)
+    {   
+        // Determine indicies starting points and new nLoc
+        locInd = sendCount;
+        rcvInd = 0;
+        newNLoc = *nLoc - sendCount + rcvCount;
+
+        // Merge arrays, reused algorithm from iterative mergesort
+        for (i = 0; i < newNLoc; i++)
+        {
+            // if local_data ind has not hit end and either rcvInd is at end or
+            //loc element is smaller than rcv element
+            if ( locInd < *nLoc && (rcvInd >= rcvCount || (*local_data)[locInd] <= rcvBuf[rcvInd]) )
+            {
+                (*tmp_array)[i] = (*local_data)[locInd];
+                locInd++;
+            }
+            else //rcv element is smaller than loc element
+            {
+                (*tmp_array)[i] = rcvBuf[rcvInd];
+                rcvInd++;
+            }
+        }
+    }
+    else
+    {
+        // Determine indicies starting points and new nLoc
+        locInd = 0;
+        rcvInd = 0;
+        newNLoc = *nLoc - sendCount + rcvCount;
+
+        // Merge arrays, reused algorithm from iterative mergesort
+        for (i = 0; i < newNLoc; i++)
+        {
+            // if local_data ind has not hit end and either rcvInd is at end or
+            //loc element is smaller than rcv element
+            if ( locInd < sendDisp && (rcvInd >= rcvCount || (*local_data)[locInd] <= rcvBuf[rcvInd]) )
+            {
+                (*tmp_array)[i] = (*local_data)[locInd];
+                locInd++;
+            }
+            else //rcv element is smaller than loc element
+            {
+                (*tmp_array)[i] = rcvBuf[rcvInd];
+                rcvInd++;
+            }
+        }
+    }
+
+    // Update valaue of nLoc
+    *nLoc = newNLoc;
+
+    // Swap local_data and tmp_array
+    tmp = *local_data;
+    *local_data = *tmp_array;
+    *tmp_array = tmp;    
+
+    return;
+}
+
+// generates appropriate nLoc depending on rank
+int create_nLoc(int nGlob,
+		int size,
+		int rank)
+{
+  int nLoc, rem;
+
+  nLoc = nGlob / size;
+  rem = nGlob % size;
+
+  if (rank < rem)
+    {
+      nLoc++;
+    }
+
+  return nLoc;
+}
+
+// prints MPI_COMM_WORLD rank to stdout
+void world_rank()
+{
+  int wRank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &wRank);
+  printf("\n=====[WORLD RANK: %d]=====\n\n", wRank);
+  return;
+}

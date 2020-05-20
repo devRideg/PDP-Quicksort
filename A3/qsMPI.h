@@ -85,3 +85,42 @@ int create_nLoc(int nGlob,
  * Prints MPI_COMM_WORLD rank to stdout. Used for debugging.
  */
 void world_rank();
+
+/**
+ * Calculates appropriate buffersize for local buffers
+ * @param nGlob global problem size
+ * @param size number of processors in MPI_COMM_WORLD
+ * @returns calculated buffersize
+ */
+int calc_buffersize(int nGlob,
+                    int size)
+
+/**
+ * Staggered file input for reduced memory requirements at root.
+ * 
+ * This is actually really inefficient and input files should really
+ * be provided as binary files and NOT txt files to enable trivial 
+ * parallel I/O with MPI... >:(
+ * (This would also reduce file size in storage)
+ * @param nGlob pointer to variable to write global problem size to
+ * @param nLoc pointer to variable to write local problem size to
+ * @param buffersize pointer to write buffer size to
+ * @param filename char array for input file name
+ * @returns pointer to local data array
+ */
+int *staggeredFile_read(int *nGlob,
+                  int *nLoc,
+                  int *buffersize,
+                  char *filename);
+
+/**
+ * Staggered file output for reduced memory requirements at root.
+ * 
+ * *Insert same rant as for staggeredFile_read*
+ * @param local_data local data array
+ * @param nLoc size of local data
+ * @param filename name of desired output file
+ */
+void staggeredFile_write(int *local_data,
+                         int nLoc,
+                         char *filename);

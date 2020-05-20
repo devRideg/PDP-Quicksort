@@ -118,3 +118,4 @@ int write_output(int *arr,
  */
 int qsComp(const void *a,
            const void *b);
+

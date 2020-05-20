@@ -17,15 +17,15 @@ int main(int argc, char *argv[])
     int recvcnts[size];                         // Recieve counts for gather
     int displs[size];                           // displacements for gather
 
-    // Read input input data
+    // Staggered file output, reads and distributes data, opne chunk at a time to reduce
+    // memory usage
+    local_data = staggeredFile_read(&nGlob, &nLoc, &buffersize, input_name);
+
+    // Start timer
     if (rank == root)
     {
-        nGlob = read_input(&input_data, input_name);
         startTime = MPI_Wtime();
     }
-
-    // Broadcast global array size
-    MPI_Bcast(&nGlob, 1, MPI_INT, root, MPI_COMM_WORLD);
 
     // set to run serially if number of processors is larger than problem size.
     if (size > nGlob)
@@ -33,38 +33,9 @@ int main(int argc, char *argv[])
         size = 1;
     }
 
-    // Calculate local array and scatter input data
-    nLoc = create_nLoc(nGlob, size, rank);
-
-    // Calculate a resonable buffer size
-    buffersize = (nGlob / size + 2) * ((int)log2((double)size));
-    if (nLoc < 34)
-    {
-        buffersize *= 4;
-    }
-    if (buffersize == 0)
-    {
-        buffersize = nGlob;
-    }
-
     // Allocate local buffers
-    local_data = (int *) malloc(buffersize * sizeof(int));
     tmp_array = (int*) malloc(buffersize * sizeof(int));
     rcvBuf = (int *) malloc(buffersize *sizeof(int));
-
-    // Gather local data array sizes
-    MPI_Allgather(&nLoc, 1, MPI_INT, &recvcnts[0], 1, MPI_INT, MPI_COMM_WORLD);
-
-    // Calculate displacements in output array
-    displs[0] = 0;
-    for (int i = 1; i < size; i++)
-    {
-        displs[i] = displs[i-1] + recvcnts[i-1];
-    }
-
-    // scatter input data to processes
-    MPI_Scatterv(&input_data[0], &recvcnts[0], &displs[0], MPI_INT,
-                 &local_data[0], nLoc, MPI_INT, root, MPI_COMM_WORLD);
 
     // Perform initial local sorting 
     qsort((void *)local_data, nLoc, sizeof(int), qsComp);
@@ -75,34 +46,22 @@ int main(int argc, char *argv[])
         nLoc = parQSort(&local_data, rcvBuf, &tmp_array, nLoc, &comm, pivot_strat);
     }
 
-    // Gather local data array sizes
-    MPI_Allgather(&nLoc, 1, MPI_INT, &recvcnts[0], 1, MPI_INT, MPI_COMM_WORLD);
-
-    // Calculate displacements in output array
-    displs[0] = 0;
-    for (int i = 1; i < size; i++)
-    {
-        displs[i] = displs[i-1] + recvcnts[i-1];
-    }
-    
-    // Gather data at root
-    MPI_Gatherv(&local_data[0], nLoc, MPI_INT, &input_data[0], &recvcnts[0],
-                &displs[0], MPI_INT, root, MPI_COMM_WORLD);
-
-    // write output file and print execution time
+    // Stop timer
     if (rank == root)
     {
         printf("%f", MPI_Wtime() - startTime);
-
-        if (OUTPUTFILE)
-        {
-            write_output(input_data, nGlob, output_name);
-        }
-	free(input_data);
     }
 
+    // free local buffers
     free(tmp_array);
     free(rcvBuf);
+
+    // Write output in a staggered manner
+    if (OUTPUTFILE)
+    {
+        staggeredFile_write(local_data, nLoc, output_name);
+    }
+
     free(local_data);
     MPI_Finalize();
     return 0;

@@ -93,7 +93,7 @@ void world_rank();
  * @returns calculated buffersize
  */
 int calc_buffersize(int nGlob,
-                    int size)
+                    int size);
 
 /**
  * Staggered file input for reduced memory requirements at root.

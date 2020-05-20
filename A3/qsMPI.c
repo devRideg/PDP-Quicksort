@@ -267,7 +267,7 @@ int *staggeredFile_read(int *nGlob,
   MPI_Status status;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
-  local_sizes[size];
+  int local_sizes[size];
   FILE *pfile;
   
   // read and broadcast problem size
@@ -287,9 +287,9 @@ int *staggeredFile_read(int *nGlob,
     if (rank == root) // root recieves all inputdata
     {
       *buffersize = calc_buffersize(*nGlob, size);
-      *nLoc = nGlob;
+      *nLoc = *nGlob;
       local_data = (int *)malloc(*nGlob * sizeof(int));
-      for (i = 0; i < nGlob; i++);
+      for (i = 0; i < *nGlob; i++);
       {
         fscanf(pfile, "%d ", &local_data[i]);
       }
@@ -309,7 +309,7 @@ int *staggeredFile_read(int *nGlob,
   local_sizes[0] = create_nLoc(*nGlob, size, 0);
   for (i = 1; i < size; i++)
   {
-    local_sizes[i] = create_nLoc(nGlob, size, i);
+    local_sizes[i] = create_nLoc(*nGlob, size, i);
   }
 
   // set local size for this processor
@@ -317,7 +317,7 @@ int *staggeredFile_read(int *nGlob,
 
   // allocate local data array
   *buffersize = calc_buffersize(*nGlob, size);
-  local_data = (int *) malloc(buffersize * sizeof(int));
+  local_data = (int *) malloc(*buffersize * sizeof(int));
 
   if (rank == root)
   {
@@ -354,11 +354,12 @@ int *staggeredFile_read(int *nGlob,
   return local_data;
 }
 
+// Write files in a staggered manner
 void staggeredFile_write(int *local_data,
                          int nLoc,
                          char *filename)
 {
-  int i, i, size, rank, root = 0;
+  int i, j, size, rank, root = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   int local_sizes[size];
@@ -381,7 +382,8 @@ void staggeredFile_write(int *local_data,
     // Recvieve local data and Write
     for (i = 1; i < size; i++)
     {
-      MPI_Recv(&local_data[0], local_sizes[i], MPI_INT, root, i, MPI_COMM_WORLD, &status);
+      MPI_Barrier(MPI_COMM_WORLD);
+      MPI_Recv(&local_data[0], local_sizes[i], MPI_INT, i, i, MPI_COMM_WORLD, &status);
       
       for (j = 0; j < local_sizes[i]; j++)
       {
@@ -393,7 +395,14 @@ void staggeredFile_write(int *local_data,
   }
   else // else send data to root
   {
-    MPI_Send(&local_data[0], nLoc, MPI_INT, root, rank, MPI_COMM_WORLD);
+    for (i = 1; i < size; i++)
+    {
+      MPI_Barrier(MPI_COMM_WORLD); //synchronize processors
+      if (rank == i)
+      {
+      MPI_Send(&local_data[0], nLoc, MPI_INT, root, rank, MPI_COMM_WORLD);
+      }
+    }
   }
   
   return;

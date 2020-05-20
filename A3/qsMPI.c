@@ -252,17 +252,19 @@ int calc_buffersize(int nGlob,
   return buffersize;
 }
 
+
 // Staggered file input for reduced memory requirements at root.
 // This is actually really inefficient and input files should really
 // be provided as binary files and NOT txt files to enable trivial 
 // parallel I/O with MPI... >:(
 // (This would also reduce file size in storage)
-int *staggeredFile_read(int *nGlob,
-                  int *nLoc,
-                  int *buffersize,
-                  char *filename)
+void staggeredFile_read(int **local_data,
+			int *nGlob,
+			int *nLoc,
+			int *buffersize,
+			char *filename)
 {
-  int size, rank, i, j, root = 0, root_start_ind, tmp, *local_data;
+  int size, rank, i, j, root = 0, root_start_ind, tmp;
   MPI_Status status;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -285,22 +287,27 @@ int *staggeredFile_read(int *nGlob,
   {
     if (rank == root) // root recieves all inputdata
     {
-      *buffersize = calc_buffersize(*nGlob, size);
+      *buffersize = *nGlob;
       *nLoc = *nGlob;
-      local_data = (int *)malloc(*nGlob * sizeof(int));
-      for (i = 0; i < *nGlob; i++);
+      *local_data = (int *)malloc(*nGlob * sizeof(int));
+      int ending = *nGlob;
+
+      int hejehj[*nGlob];
+      for (i = 0; i < ending; i++);
       {
-        fscanf(pfile, "%d ", &local_data[i]);
+        fscanf(pfile, "%d ", &(*local_data)[i]);
       }
+
+      printf("bajs\n");
       fclose(pfile);
-      return local_data;
+      return;
     }
     else // other processors recieve zeroes values
     {
       *buffersize = 1;
       *nLoc = 0;
-      local_data = (int *) malloc(sizeof(int));
-      return local_data;
+      *local_data = (int *)malloc(sizeof(int));
+      return;
     }
   }
 
@@ -316,7 +323,7 @@ int *staggeredFile_read(int *nGlob,
 
   // allocate local data array
   *buffersize = calc_buffersize(*nGlob, size);
-  local_data = (int *) malloc(*buffersize * sizeof(int));
+  *local_data = (int *) malloc(*buffersize * sizeof(int));
 
   if (rank == root)
   {
@@ -331,31 +338,32 @@ int *staggeredFile_read(int *nGlob,
     {
       for (j = 0; j < local_sizes[i]; j++)
       {
-        fscanf(pfile, "%d ", &local_data[j]); 
+        fscanf(pfile, "%d ", &(*local_data)[j]); 
       }
-      MPI_Send(&local_data[0], local_sizes[i], MPI_INT, i, i, MPI_COMM_WORLD);
+      MPI_Send(&(*local_data)[0], local_sizes[i], MPI_INT, i, i, MPI_COMM_WORLD);
     }
-
+    
+    // return to root data block starting index
     fseek(pfile, root_start_ind, SEEK_SET);
 
     // read local data for root
     for (j = 0; j < local_sizes[0]; j++)
     {
-      fscanf(pfile, "%d ", &local_data[j]);
+      fscanf(pfile, "%d ", &(*local_data)[j]);
     }
     fclose(pfile);
   }
   else
   {
-    MPI_Recv(&local_data[0], local_sizes[rank], MPI_INT, root, rank, MPI_COMM_WORLD, &status);
+    MPI_Recv(&(*local_data)[0], local_sizes[rank], MPI_INT, root, rank, MPI_COMM_WORLD, &status);
   }
 
-  return local_data;
+  return;
 }
 
-// Write files in a staggered manner
 void staggeredFile_write(int *local_data,
                          int nLoc,
+			 int s2,
                          char *filename)
 {
   int i, j, size, rank, root = 0;
@@ -370,39 +378,48 @@ void staggeredFile_write(int *local_data,
 
   if (rank == root) // if root, gather and write data
   {
-    pfile = fopen(filename, "r");
+
+    pfile = fopen(filename, "w");
 
     // Write root data
     for (j = 0; j < local_sizes[0]; j++)
     {
+      //      printf("locs = %d, locDat = %d\n",nLoc, local_data[j]);
       fprintf(pfile, "%d ", local_data[j]);
     }
-
-    // Recvieve local data and Write
-    for (i = 1; i < size; i++)
-    {
-      MPI_Barrier(MPI_COMM_WORLD);
-      MPI_Recv(&local_data[0], local_sizes[i], MPI_INT, i, i, MPI_COMM_WORLD, &status);
-      
-      for (j = 0; j < local_sizes[i]; j++)
+    
+    if (s2 > 1)
       {
-        fprintf(pfile, "%d ", local_data[j]);
+	// Recvieve local data and Write
+	for (i = 1; i < size; i++)
+	  {
+
+	    MPI_Barrier(MPI_COMM_WORLD);
+	    MPI_Recv(&local_data[0], local_sizes[i], MPI_INT, i, i, MPI_COMM_WORLD, &status);
+	    
+	    for (j = 0; j < local_sizes[i]; j++)
+	      {
+		fprintf(pfile, "%d ", local_data[j]);
+	      }
+	  } 
       }
-    } 
 
     fclose(pfile);
   }
   else // else send data to root
   {
-    for (i = 1; i < size; i++)
+    if (s2 > 1)
     {
-      MPI_Barrier(MPI_COMM_WORLD); //synchronize processors
-      if (rank == i)
+      for (i = 1; i < size; i++)
       {
-      MPI_Send(&local_data[0], nLoc, MPI_INT, root, rank, MPI_COMM_WORLD);
+        MPI_Barrier(MPI_COMM_WORLD);
+        if (rank == i)
+        {
+          MPI_Send(&local_data[0], nLoc, MPI_INT, root, rank, MPI_COMM_WORLD);
+        }
       }
     }
   }
-  
+
   return;
 }

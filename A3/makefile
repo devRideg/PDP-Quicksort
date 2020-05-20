@@ -1,5 +1,5 @@
 CC = mpicc
-CFLAGS= -std=c99 -g 
+CFLAGS= -std=c99 -g -O3
 LDFLAGS= -lm 
 OBJS = qsArray.o qsMPI.o Quicksort.o 
 

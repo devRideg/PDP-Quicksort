@@ -19,8 +19,8 @@ int main(int argc, char *argv[])
 
     // Staggered file output, reads and distributes data, opne chunk at a time to reduce
     // memory usage
-    local_data = staggeredFile_read(&nGlob, &nLoc, &buffersize, input_name);
-
+    staggeredFile_read(&local_data, &nGlob, &nLoc, &buffersize, input_name);
+    
     // Start timer
     if (rank == root)
     {
@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
     // Write output in a staggered manner
     if (OUTPUTFILE)
     {
-        staggeredFile_write(local_data, nLoc, size, output_name);
+      staggeredFile_write(local_data, nLoc, size, output_name);
     }
 
     free(local_data);

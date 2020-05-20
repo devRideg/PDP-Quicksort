@@ -47,6 +47,7 @@ int parQSort(int **local_data,
  */ 
 int findPiv(int locPiv,
             int strat,
+	    int empt,
             MPI_Comm *comm);
 
 /**
@@ -69,8 +70,60 @@ void mergeArrays(int **local_data,
                  int rcvCount,
                  int **tmp_array);
 
+/**
+ * Generate n for local block depending on global problem size and current rank.
+ * @param nGlob Global problem size
+ * @param size number of processors in current communicator
+ * @param rank rank of this processor
+ * @returns local problem size
+ */
 int create_nLoc(int nGlob,
 		int size,
 		int rank);
 
+/**
+ * Prints MPI_COMM_WORLD rank to stdout. Used for debugging.
+ */
 void world_rank();
+
+/**
+ * Calculates appropriate buffersize for local buffers
+ * @param nGlob global problem size
+ * @param size number of processors in MPI_COMM_WORLD
+ * @returns calculated buffersize
+ */
+int calc_buffersize(int nGlob,
+                    int size);
+
+/**
+ * Staggered file input for reduced memory requirements at root.
+ * 
+ * This is actually really inefficient and input files should really
+ * be provided as binary files and NOT txt files to enable trivial 
+ * parallel I/O with MPI... >:(
+ * (This would also reduce file size in storage)
+ * @param nGlob pointer to variable to write global problem size to
+ * @param nLoc pointer to variable to write local problem size to
+ * @param buffersize pointer to write buffer size to
+ * @param filename char array for input file name
+ * @returns pointer to local data array
+ */
+int *staggeredFile_read(int **local_data,
+			int *nGlob,
+			int *nLoc,
+			int *buffersize,
+			char *filename);
+
+/**
+ * Staggered file output for reduced memory requirements at root.
+ * 
+ * *Insert same rant as for staggeredFile_read*
+ * @param local_data local data array
+ * @param nLoc size of local data
+ * @param s2 enter this as greater than 1 to write for entire MPI_COMM_WORLD
+ * @param filename name of desired output file
+ */
+void staggeredFile_write(int *local_data,
+                         int nLoc,
+			 int s2,
+                         char *filename);

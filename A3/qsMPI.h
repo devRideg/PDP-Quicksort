@@ -108,10 +108,11 @@ int calc_buffersize(int nGlob,
  * @param filename char array for input file name
  * @returns pointer to local data array
  */
-int *staggeredFile_read(int *nGlob,
-                  int *nLoc,
-                  int *buffersize,
-                  char *filename);
+void staggeredFile_read(int **local_data,
+			int *nGlob,
+			int *nLoc,
+			int *buffersize,
+			char *filename);
 
 /**
  * Staggered file output for reduced memory requirements at root.
@@ -119,8 +120,10 @@ int *staggeredFile_read(int *nGlob,
  * *Insert same rant as for staggeredFile_read*
  * @param local_data local data array
  * @param nLoc size of local data
+ * @param s2 enter this as greater than 1 to write for entire MPI_COMM_WORLD
  * @param filename name of desired output file
  */
 void staggeredFile_write(int *local_data,
                          int nLoc,
+			 int s2,
                          char *filename);

@@ -252,7 +252,6 @@ int calc_buffersize(int nGlob,
   return buffersize;
 }
 
-
 // Staggered file input for reduced memory requirements at root.
 // This is actually really inefficient and input files should really
 // be provided as binary files and NOT txt files to enable trivial 
@@ -300,7 +299,7 @@ int *staggeredFile_read(int *nGlob,
     {
       *buffersize = 1;
       *nLoc = 0;
-      *local_data = 0;
+      local_data = (int *) malloc(sizeof(int));
       return local_data;
     }
   }
@@ -330,7 +329,7 @@ int *staggeredFile_read(int *nGlob,
     // Scatter local data
     for (i = 1; i < size; i++)
     {
-      for (j = 0; i < local_sizes[i]; i++)
+      for (j = 0; j < local_sizes[i]; j++)
       {
         fscanf(pfile, "%d ", &local_data[j]); 
       }
@@ -340,7 +339,7 @@ int *staggeredFile_read(int *nGlob,
     fseek(pfile, root_start_ind, SEEK_SET);
 
     // read local data for root
-    for (j = 0; j < local_sizes[0]; i++)
+    for (j = 0; j < local_sizes[0]; j++)
     {
       fscanf(pfile, "%d ", &local_data[j]);
     }

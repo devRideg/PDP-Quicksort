@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
     // Write output in a staggered manner
     if (OUTPUTFILE)
     {
-        staggeredFile_write(local_data, nLoc, output_name);
+        staggeredFile_write(local_data, nLoc, size, output_name);
     }
 
     free(local_data);
